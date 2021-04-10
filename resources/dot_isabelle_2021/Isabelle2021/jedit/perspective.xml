@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE PERSPECTIVE SYSTEM "perspective.dtd">
+<PERSPECTIVE>
+<VIEW PLAIN="FALSE">
+
+<TITLE>​Isabelle2021/HOL - </TITLE>
+<PANES>
+"/root/Scratch.thy" buffer "global" bufferset
+</PANES>
+<GEOMETRY X="0" Y="0" WIDTH="1241" HEIGHT="850" EXT_STATE="0" />
+</VIEW>
+</PERSPECTIVE>

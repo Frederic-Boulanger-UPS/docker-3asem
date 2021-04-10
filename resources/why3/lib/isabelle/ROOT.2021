@@ -1,0 +1,10 @@
+chapter Why3
+
+session Why3 = "HOL" +
+  options [document = false, quick_and_dirty]
+  sessions
+    "HOL-Library"
+    "HOL-Eisbach"
+    "HOL-Decision_Procs"
+    "HOL-Computational_Algebra"
+  theories Why3

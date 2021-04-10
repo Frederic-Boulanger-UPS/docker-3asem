@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Name=Isabelle-2021
+GenericName=Proof assistant
+Exec=/usr/local/bin/isabelle jedit %F
+StartupNotify=true
+Terminal=false
+Icon=/usr/local/Isabelle2021/lib/icons/isabelle.xpm
+Type=Application
+Categories=Proof;Development;Science;Math
+MimeType=text/text;
