@@ -93,7 +93,7 @@ RUN apt autoremove && apt autoclean
 COPY resources/why3.tar ${HOME}/
 RUN wget https://gforge.inria.fr/frs/download.php/file/38291/why3-1.3.1.tar.gz
 RUN tar zxf why3-1.3.1.tar.gz
-RUN cd why3-1.3.1 && tar xvf ${HOME}/why3.tar && rm -r ${HOME}/why3.tar
+RUN cd why3-1.3.1 && tar xvf ${HOME}/why3.tar ; rm -r ${HOME}/why3.tar
 RUN cd why3-1.3.1 && ./configure && make \
     && echo "/usr/local/lib/why3/isabelle" >> /usr/local/${ISAINSTDIR}/etc/components
 RUN cd why3-1.3.1/lib/isabelle; cp ROOT.2021 ROOT 
@@ -151,3 +151,6 @@ RUN cd /usr/local; tar zxf ${ECLIPSETGZ} \
 COPY resources/Eclipse.desktop /usr/share/applications/
 COPY resources/dot_eclipse /root/.eclipse
 RUN echo 'cp -r /root/.eclipse ${HOME}' >> /root/.novnc_setup
+
+RUN apt-get install at-spi2-core
+RUN rm -rf /tmp/*
