@@ -1,0 +1,17 @@
+# For building lt-ergo 2.4.0
+# In a docker container run with --privileged
+apt install -y liblablgtksourceview2-ocaml-dev
+apt install -y opam
+opam init
+eval $(opam env)
+opam install dune dune-configurator
+opam install camlzip cmdliner lablgtk psmt2-frontend stdlib-shims zarith
+rm -r /root/.opam/default/lib/num*
+opam install ocplib-simplex
+
+wget https://github.com/OCamlPro/alt-ergo/archive/2.4.0.tar.gz
+tar zxf 2.4.0.tar.gz
+cd alt-ergo-2.4.0/
+autoconf
+./configure
+make

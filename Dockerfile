@@ -22,20 +22,45 @@ RUN apt-get install -y ocaml menhir \
   libmenhir-ocaml-dev liblablgtk3-ocaml-dev liblablgtksourceview3-ocaml-dev \
   libocamlgraph-ocaml-dev libre-ocaml-dev libjs-of-ocaml-dev
 
-# Install Coq and Alt-ergo for Why3
-RUN apt-get install -y coqide alt-ergo
+# Install Coq 
+RUN apt-get install -y coqide
+
+COPY resources/altergo/alt-ergo_240_$arch /usr/local/bin/alt-ergo
+COPY resources/altergo/altgr-ergo_240_$arch /usr/local/bin/altgr-ergo
+RUN chmod a+x /usr/local/bin/alt-ergo /usr/local/bin/altgr-ergo
 
 # Install Z3 4.8.6
-RUN wget https://github.com/Z3Prover/z3/archive/z3-4.8.6.tar.gz \
-	&& tar zxf z3-4.8.6.tar.gz \
-	&& cd z3-z3-4.8.6; env PYTHON=python3 ./configure; cd build; make; make install; \
-	cd ../..; rm -r z3-*
+# RUN wget https://github.com/Z3Prover/z3/archive/z3-4.8.6.tar.gz \
+# 	&& tar zxf z3-4.8.6.tar.gz \
+# 	&& cd z3-z3-4.8.6; env PYTHON=python3 ./configure; cd build; make; make install; \
+# 	cd ../..; rm -r z3-*
+COPY resources/z3/z3_486_$arch /usr/local/bin/z3
+RUN chmod a+x /usr/local/bin/z3
 
 # Install E prover
-RUN wget http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz \
-	 && tar zxf E.tgz \
-	 && cd E; ./configure --prefix=/usr/local; make; make install; \
-	 cd ..; rm -r E E.tgz
+# RUN wget http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz \
+# 	 && tar zxf E.tgz \
+# 	 && cd E; ./configure --prefix=/usr/local; make; make install; \
+# 	 cd ..; rm -r E E.tgz
+COPY resources/eprover/eprover_20_$arch /usr/local/bin/eprover
+RUN chmod a+x /usr/local/bin/eprover
+
+# Install CVC4, only on amd64/x86_64 (fails on arm64)
+# CVC4 requires Java (for ANTLR)
+# RUN if [ "$arch" = "amd64" ]; then pip3 install toml; fi
+# RUN if [ "$arch" = "amd64" ]; then \
+# 			wget https://github.com/CVC4/CVC4/archive/1.7.tar.gz \
+# 	    && tar zxf 1.7.tar.gz ; \
+# 	  fi
+# RUN if [ "$arch" = "amd64" ]; then \
+# 	    cd CVC4-1.7; ./contrib/get-antlr-3.4 && ./configure.sh \
+# 	    && cd build && make && make install; \
+# 	  fi
+# RUN if [ "$arch" = "amd64" ]; then rm -r CVC4* && rm 1.7.tar.gz; fi
+COPY resources/cvc4/cvc4_17_$arch /usr/local/bin/cvc4
+COPY resources/cvc4/libcvc4parser.so.6_$arch /usr/local/lib/libcvc4parser.so.6
+COPY resources/cvc4/libcvc4.so.6_$arch /usr/local/lib/libcvc4.so.6
+RUN chmod a+x /usr/local/bin/cvc4
 
 # Install Isabelle 2021
 ARG ISATARGZ=Isabelle2021_linux.tar.gz
@@ -72,55 +97,29 @@ RUN echo 'cp -r /root/.isabelle ${HOME}' >> /root/.novnc_setup
 RUN ln -s ${ISAJDK}/bin/java /usr/local/bin/ ; \
     ln -s ${ISAJDK}/bin/javac /usr/local/bin/
 
-# Install CVC4, only on amd64/x86_64 (fails on arm64)
-# CVC4 requires Java (for ANTLR)
-RUN if [ "$arch" = "amd64" ]; then pip3 install toml; fi
-# Reuse JDK from Isabelle
-# RUN if [ "$arch" = "amd64" ]; then apt-get install -y openjdk-14-jdk; fi
-RUN if [ "$arch" = "amd64" ]; then \
-			wget https://github.com/CVC4/CVC4/archive/1.7.tar.gz \
-	    && tar zxf 1.7.tar.gz ; \
-	  fi
-RUN if [ "$arch" = "amd64" ]; then \
-	    cd CVC4-1.7; ./contrib/get-antlr-3.4 && ./configure.sh \
-	    && cd build && make && make install; \
-	  fi
-RUN if [ "$arch" = "amd64" ]; then rm -r CVC4* && rm 1.7.tar.gz; fi
-
 RUN apt autoremove && apt autoclean
 
 # Install Why3 when working with Isabelle 2021
 COPY resources/why3.tar ${HOME}/
-RUN wget https://gforge.inria.fr/frs/download.php/file/38291/why3-1.3.1.tar.gz
-RUN tar zxf why3-1.3.1.tar.gz
-RUN cd why3-1.3.1 && tar xvf ${HOME}/why3.tar ; rm -r ${HOME}/why3.tar
-RUN cd why3-1.3.1 && ./configure && make \
+RUN wget https://gforge.inria.fr/frs/download.php/file/38367/why3-1.3.3.tar.gz
+RUN tar zxf why3-1.3.3.tar.gz && rm why3-1.3.3.tar.gz
+RUN wget https://gforge.inria.fr/frs/download.php/file/38425/why3-1.4.0.tar.gz
+RUN tar zxf why3-1.4.0.tar.gz && rm why3-1.4.0.tar.gz
+RUN cp why3-1.4.0/drivers/alt_ergo* why3-1.3.3/drivers/
+RUN cp why3-1.4.0/share/provers-detection-data.conf why3-1.3.3/share/
+RUN rm -r why3-1.4.0
+RUN cd why3-1.3.3 && tar xvf ${HOME}/why3.tar ; rm ${HOME}/why3.tar
+RUN cd why3-1.3.3 && ./configure && make \
     && echo "/usr/local/lib/why3/isabelle" >> /usr/local/${ISAINSTDIR}/etc/components
-RUN cd why3-1.3.1/lib/isabelle; cp ROOT.2021 ROOT 
-RUN cd why3-1.3.1; make install; make byte; make install-lib
+RUN cd why3-1.3.3/lib/isabelle; cp ROOT.2021 ROOT 
+RUN cd why3-1.3.3; make install; make byte; make install-lib
 RUN mv ${HOME}/.isabelle/${ISAHEAPSDIR}/Why3 /usr/local/${ISAHEAPSDIR}/ ;\
     mv ${HOME}/.isabelle/${ISAHEAPSDIR}/log/* /usr/local/${ISAHEAPSDIR}/log/
-RUN rm -r why3-1.3.1 why3-1.3.1.tar.gz
+RUN rm -r why3-1.3.3
 
 # Configure Why3 with SMT provers and save the configuration file
 RUN why3 config --detect-provers && mv ${HOME}/.why3.conf /root/
 RUN echo 'cp /root/.why3.conf ${HOME}' >> /root/.novnc_setup
-
-# # Install Frama-C
-# RUN apt-get install -y yaru-theme-icon
-# RUN wget https://git.frama-c.com/pub/frama-c/-/archive/22.0/frama-c-22.0.tar.gz
-# RUN tar zxf frama-c-22.0.tar.gz; cd frama-c-22.0; autoconf; ./configure; \
-# 		make; make install ; \
-# 		cd ..; rm -rf frama-c-22.0*
-# 
-# # Install Metacsl
-# RUN wget https://git.frama-c.com/pub/meta/-/archive/0.1/frama-c-metacsl-0.1.tar.gz \
-# 	&& tar zxf frama-c-metacsl-0.1.tar.gz \
-# 	&& cd `ls -d meta-0.1-*` \
-# 	&& autoconf && ./configure \
-# 	&& make \
-# 	&& make install ; \
-# 	cd ..; rm -rf meta-0.1-*
 
 # Configuration of the file manager and the application launcher
 COPY resources/dot_config/lxpanel/LXDE/panels/panel_isa2021_Eclipse /root/.config/lxpanel/LXDE/panels/panel
@@ -142,15 +141,37 @@ COPY resources/dot_config/lxpanel/LXDE/panels/panel_isa2021_Eclipse /root/.confi
 #   * Programming languages > Javascript dev tools
 #   * Programming languages > Wild Web developer
 # * My MicroC feature from https://wdi.centralesupelec.fr/boulanger/misc/microc-update-site/
-ARG ECLIPSETGZ=eclipse-modeling-2020-06-microc.tgz
+ARG ECLIPSETGZ=eclipse-modeling-2020-06-microc_$arch.tgz
 ARG ECLIPSEINSTDIR=/usr/local/eclipse-modeling-2020-06
 COPY resources/${ECLIPSETGZ} /usr/local/
-RUN cd /usr/local; tar zxf ${ECLIPSETGZ} \
-    && rm ${ECLIPSETGZ}; \
+RUN cd /usr/local; tar zxf ${ECLIPSETGZ} && rm ${ECLIPSETGZ}; \
     ln -s ${ECLIPSEINSTDIR}/eclipse /usr/local/bin/eclipse
 COPY resources/Eclipse.desktop /usr/share/applications/
 COPY resources/dot_eclipse /root/.eclipse
 RUN echo 'cp -r /root/.eclipse ${HOME}' >> /root/.novnc_setup
 
+# # Install Frama-C
+RUN apt-get install -y yaru-theme-icon
+RUN wget https://git.frama-c.com/pub/frama-c/-/archive/22.0/frama-c-22.0.tar.gz
+RUN tar zxf frama-c-22.0.tar.gz && rm frama-c-22.0.tar.gz; \
+    cd frama-c-22.0; autoconf; ./configure; make; make install ; \
+		cd ..; rm -rf frama-c-22.0
+
+# Install Metacsl
+RUN wget https://git.frama-c.com/pub/meta/-/archive/0.1/frama-c-metacsl-0.1.tar.gz \
+  	&& tar zxf frama-c-metacsl-0.1.tar.gz && rm frama-c-metacsl-0.1.tar.gz \
+  	&& cd `ls -d meta-0.1-*` \
+  	&& autoconf && ./configure && make && make install ; \
+  	cd ..; rm -rf meta-0.1-*
+
 RUN apt-get install at-spi2-core
+
+# Install Soufflé https://souffle-lang.github.io/index.html
+RUN echo "deb https://dl.bintray.com/souffle-lang/deb-unstable focal main" | tee -a /etc/apt/sources.list
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 379CE192D401AB61
+RUN apt-get update
+RUN apt-get install -y souffle
+
+RUN apt autoremove && apt autoclean
+
 RUN rm -rf /tmp/*
